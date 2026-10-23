@@ -1,0 +1,48 @@
+
+export type LimitOrder = {
+  id: string;
+  owner: string;
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: string;
+  targetPrice: number;
+  minAmountOut: string;
+  side: "buy" | "sell";
+  status: "open" | "triggered" | "filled" | "cancelled";
+};
+
+export function shouldTriggerOrder(
+  order: LimitOrder,
+  currentPrice: number,
+): boolean {
+  if (
+    order.status !== "open" ||
+    !Number.isFinite(currentPrice) ||
+    currentPrice <= 0 ||
+    !Number.isFinite(order.targetPrice) ||
+    order.targetPrice <= 0
+  ) {
+    return false;
+  }
+
+  return order.side === "buy"
+    ? currentPrice <= order.targetPrice
+    : currentPrice >= order.targetPrice;
+}
+
+export function calculateMinAmountOut(
+  expectedAmountOut: bigint,
+  slippageBps: bigint,
+): bigint {
+  if (
+    expectedAmountOut <= 0n ||
+    slippageBps < 0n ||
+    slippageBps >= 10_000n
+  ) {
+    throw new Error("Invalid output amount or slippage");
+  }
+
+  return (
+    expectedAmountOut * (10_000n - slippageBps)
+  ) / 10_000n;
+}
